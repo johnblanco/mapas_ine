@@ -3,16 +3,28 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 import plotly.express as px
+import json
+import urllib
+import pandas as pd
+
+
+def read_geojson():
+    with open('geojsons/barrios.geojson', encoding="latin-1") as f:
+        data = json.loads(f.read())
+    return data
 
 
 def get_fig():
-    df = px.data.election()
-    geojson = px.data.election_geojson()
+    df = pd.read_csv('csvs/density_by_barrio.csv')
+    geojson = read_geojson()
 
-    fig = px.choropleth(df, geojson=geojson, color="Bergeron",
-                        locations="district", featureidkey="properties.district",
-                        projection="mercator"
-                        )
+    fig = px.choropleth_mapbox(df, geojson=geojson, color="density",
+                               locations="code", featureidkey="properties.codigo",
+                               mapbox_style="carto-positron",
+                               zoom=10, center={"lat": -34.8414, "lon": -56.1422},
+                               opacity=0.5,
+                               )
+
     fig.update_geos(fitbounds="locations", visible=False)
     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
     return fig
@@ -28,14 +40,8 @@ app.layout = html.Div([
     dcc.Graph(figure=get_fig()),
 ])
 
-
-@app.callback(
-    Output(component_id='my-div', component_property='children'),
-    [Input(component_id='my-id', component_property='value')]
-)
-def update_output_div(input_value):
-    return 'You\'ve entered "{}"'.format(input_value)
-
+# TODO conseguir un geojson mas chico o ver la forma de reducirle la definicion, al exportar el shp de departamentos queda un archivo de 9 MB
+# TODO barrios.geojson lo consegui de https://github.com/vierja/geojson_montevideo/blob/master/barrios.geojson
 
 if __name__ == '__main__':
     app.run_server()
