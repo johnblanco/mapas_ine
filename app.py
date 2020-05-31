@@ -6,16 +6,18 @@ import plotly.express as px
 import json
 import urllib
 import pandas as pd
+import urllib.request
 
 
 def read_geojson():
-    with open('geojsons/barrios.geojson', encoding="latin-1") as f:
-        data = json.loads(f.read())
+    with urllib.request.urlopen(
+            'https://raw.githubusercontent.com/johnblanco/mapas_ine/master/geojsons/barrios.geojson') as url:
+        data = json.loads(url.read().decode(encoding="latin-1"))
     return data
 
 
 def get_fig():
-    df = pd.read_csv('csvs/density_by_barrio.csv')
+    df = pd.read_csv('https://raw.githubusercontent.com/johnblanco/mapas_ine/master/csvs/density_by_barrio.csv')
     geojson = read_geojson()
 
     fig = px.choropleth_mapbox(df, geojson=geojson, color="density",
